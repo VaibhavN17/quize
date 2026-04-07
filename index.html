@@ -1,0 +1,494 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+#quiz-app { padding: 1rem 0; max-width: 760px; margin: auto; }
+.screen { display: none; }
+.screen.active { display: block; }
+.topic-btn {
+  display: inline-block; padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 500; cursor: pointer; border: 0.5px solid;
+  margin: 4px; transition: all 0.15s;
+}
+.topic-btn.active { color: white !important; }
+.tb-all { border-color: #888; color: #555; }
+.tb-all.active { background: #555; }
+.tb-ioc { border-color: #534AB7; color: #534AB7; }
+.tb-ioc.active { background: #534AB7; }
+.tb-jdbc { border-color: #0F6E56; color: #0F6E56; }
+.tb-jdbc.active { background: #0F6E56; }
+.tb-boot { border-color: #185FA5; color: #185FA5; }
+.tb-boot.active { background: #185FA5; }
+.tb-ms { border-color: #BA7517; color: #BA7517; }
+.tb-ms.active { background: #BA7517; }
+.start-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 2rem;
+  text-align: center;
+}
+.stat-row { display: flex; gap: 12px; justify-content: center; margin: 1.5rem 0; flex-wrap: wrap; }
+.stat-box {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  padding: 12px 20px;
+  min-width: 90px;
+}
+.stat-num { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.stat-lbl { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+.progress-bar-bg {
+  background: var(--color-background-secondary);
+  border-radius: 4px; height: 6px; margin: 1rem 0;
+}
+.progress-bar-fill {
+  background: #534AB7; height: 6px; border-radius: 4px;
+  transition: width 0.3s;
+}
+.q-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+.q-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px; }
+.q-topic-badge {
+  font-size: 11px; font-weight: 500; padding: 3px 10px;
+  border-radius: 12px;
+}
+.badge-ioc { background: #EEEDFE; color: #3C3489; }
+.badge-jdbc { background: #E1F5EE; color: #085041; }
+.badge-boot { background: #E6F1FB; color: #0C447C; }
+.badge-ms { background: #FAEEDA; color: #633806; }
+.q-num { font-size: 13px; color: var(--color-text-secondary); }
+.q-text { font-size: 16px; color: var(--color-text-primary); line-height: 1.5; margin-bottom: 1.25rem; }
+.opt-btn {
+  width: 100%; text-align: left; padding: 12px 16px;
+  border: 0.5px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  font-size: 14px; cursor: pointer;
+  margin-bottom: 8px; transition: all 0.15s;
+  line-height: 1.4;
+}
+.opt-btn:hover:not(:disabled) { background: var(--color-background-secondary); }
+.opt-btn.correct { background: #EAF3DE; border-color: #639922; color: #27500A; }
+.opt-btn.wrong { background: #FCEBEB; border-color: #E24B4A; color: #501313; }
+.opt-btn.reveal { background: #EAF3DE; border-color: #639922; color: #27500A; }
+.opt-btn:disabled { cursor: default; }
+.nav-row { display: flex; gap: 10px; justify-content: space-between; align-items: center; margin-top: 1rem; }
+.btn-primary {
+  background: #534AB7; color: white; border: none;
+  padding: 10px 24px; border-radius: var(--border-radius-md);
+  font-size: 14px; cursor: pointer; font-weight: 500;
+}
+.btn-primary:hover { background: #3C3489; }
+.btn-secondary {
+  background: transparent; color: var(--color-text-secondary);
+  border: 0.5px solid var(--color-border-secondary);
+  padding: 10px 20px; border-radius: var(--border-radius-md);
+  font-size: 14px; cursor: pointer;
+}
+.btn-secondary:hover { background: var(--color-background-secondary); }
+.feedback { font-size: 13px; color: var(--color-text-secondary); font-style: italic; margin-top: 8px; }
+.result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 1.5rem 0; }
+.result-box {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  padding: 14px; text-align: center;
+}
+.result-big { font-size: 28px; font-weight: 500; }
+.result-lbl { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+.score-ring { width: 100px; height: 100px; margin: 0 auto 1.5rem; }
+.h1 { font-size: 22px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 0.5rem; }
+.sub { font-size: 14px; color: var(--color-text-secondary); }
+.q-skip { font-size: 13px; color: var(--color-text-secondary); cursor: pointer; }
+.q-skip:hover { color: var(--color-text-primary); }
+</style>
+
+<div id="quiz-app">
+
+<div id="screen-start" class="screen active">
+  <div class="start-card">
+    <div class="h1">Spring & Microservices Quiz</div>
+    <p class="sub" style="margin-bottom:1.5rem">125 questions across 4 topics</p>
+
+    <div style="margin-bottom:1.5rem">
+      <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:8px">Filter by topic</div>
+      <span class="topic-btn tb-all active" onclick="setTopic('all',this)">All Topics</span>
+      <span class="topic-btn tb-ioc" onclick="setTopic('ioc',this)">IoC & Beans</span>
+      <span class="topic-btn tb-jdbc" onclick="setTopic('jdbc',this)">Spring JDBC</span>
+      <span class="topic-btn tb-boot" onclick="setTopic('boot',this)">Spring Boot</span>
+      <span class="topic-btn tb-ms" onclick="setTopic('ms',this)">Microservices</span>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-num" id="q-count">125</div><div class="stat-lbl">Questions</div></div>
+      <div class="stat-box"><div class="stat-num">4</div><div class="stat-lbl">Topics</div></div>
+      <div class="stat-box"><div class="stat-num">4</div><div class="stat-lbl">Options each</div></div>
+    </div>
+
+    <div style="margin-bottom:1.5rem">
+      <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:8px">Number of questions</div>
+      <input type="range" min="5" max="125" value="125" id="q-limit" oninput="document.getElementById('q-limit-out').textContent=this.value;document.getElementById('q-count').textContent=this.value" style="width:70%">
+      <span id="q-limit-out" style="font-size:14px;font-weight:500;margin-left:8px">125</span>
+    </div>
+
+    <button class="btn-primary" onclick="startQuiz()" style="padding:12px 36px;font-size:15px">Start Quiz</button>
+  </div>
+</div>
+
+<div id="screen-quiz" class="screen">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px">
+    <span id="prog-text" style="font-size:13px;color:var(--color-text-secondary)"></span>
+    <div style="display:flex;gap:16px;font-size:13px">
+      <span style="color:#639922">✓ <span id="live-correct">0</span></span>
+      <span style="color:#E24B4A">✗ <span id="live-wrong">0</span></span>
+      <span class="q-skip" onclick="skipQ()">Skip →</span>
+    </div>
+  </div>
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+
+  <div class="q-card">
+    <div class="q-meta">
+      <span class="q-topic-badge" id="q-badge"></span>
+      <span class="q-num" id="q-num-label"></span>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div id="options-container"></div>
+    <div class="feedback" id="feedback" style="display:none"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="endQuiz()">End Quiz</button>
+    <button class="btn-primary" id="next-btn" onclick="nextQ()" style="display:none">Next →</button>
+  </div>
+</div>
+
+<div id="screen-result" class="screen">
+  <div class="start-card">
+    <svg class="score-ring" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="42" fill="none" stroke="var(--color-background-secondary)" stroke-width="10"/>
+      <circle cx="50" cy="50" r="42" fill="none" stroke="#534AB7" stroke-width="10"
+        stroke-dasharray="263.9" stroke-dashoffset="263.9"
+        id="ring-circle" stroke-linecap="round"
+        transform="rotate(-90 50 50)"/>
+      <text x="50" y="55" text-anchor="middle" font-size="18" font-weight="500" fill="var(--color-text-primary)" id="ring-pct">0%</text>
+    </svg>
+
+    <div class="h1" id="result-title">Quiz Complete!</div>
+    <p class="sub" id="result-sub" style="margin-bottom:1.5rem"></p>
+
+    <div class="result-grid">
+      <div class="result-box"><div class="result-big" id="res-correct" style="color:#639922">0</div><div class="result-lbl">Correct</div></div>
+      <div class="result-box"><div class="result-big" id="res-wrong" style="color:#E24B4A">0</div><div class="result-lbl">Wrong</div></div>
+      <div class="result-box"><div class="result-big" id="res-skip" style="color:var(--color-text-secondary)">0</div><div class="result-lbl">Skipped</div></div>
+      <div class="result-box"><div class="result-big" id="res-total">0</div><div class="result-lbl">Total</div></div>
+    </div>
+
+    <div id="topic-breakdown" style="margin-bottom:1.5rem;text-align:left"></div>
+
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn-secondary" onclick="showStart()">← Back</button>
+      <button class="btn-primary" onclick="startQuiz()">Retry</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  {topic:'ioc',q:'What does IoC stand for in Spring?',a:'Inversion of Control',opts:['Injection of Components','Inversion of Control','Interface of Classes','Instance of Container']},
+  {topic:'ioc',q:'Which design pattern is used by Spring to achieve IoC?',a:'Dependency Injection (DI)',opts:['Singleton','Observer','Dependency Injection (DI)','Factory']},
+  {topic:'ioc',q:'Which interface is the root of the Spring IoC container?',a:'BeanFactory',opts:['ApplicationContext','BeanFactory','ContextLoader','SpringContainer']},
+  {topic:'ioc',q:'How do you instantiate an ApplicationContext using an XML file?',a:'ClassPathXmlApplicationContext or FileSystemXmlApplicationContext',opts:['ClassPathXmlApplicationContext or FileSystemXmlApplicationContext','XmlBeanFactory only','AnnotationConfigApplicationContext','WebApplicationContext']},
+  {topic:'ioc',q:'In constructor-based DI, which XML tag is used?',a:'<constructor-arg>',opts:['<inject>','<property>','<constructor-arg>','<bean-arg>']},
+  {topic:'ioc',q:'In setter-based DI, which XML tag is used?',a:'<property>',opts:['<setter>','<property>','<inject>','<value>']},
+  {topic:'ioc',q:'Which annotation is used to perform dependency injection automatically?',a:'@Autowired',opts:['@Inject','@Resource','@Autowired','@Required']},
+  {topic:'ioc',q:'What is the main benefit of Dependency Injection?',a:'Loose coupling',opts:['Faster execution','Loose coupling','More memory usage','Tight coupling']},
+  {topic:'ioc',q:'Which annotation is used to mark a class as a Spring Bean?',a:'All of the above',opts:['@Component','@Service','@Repository','All of the above']},
+  {topic:'ioc',q:'Can a Spring bean be instantiated without a configuration file?',a:'Yes, using Annotation-based configuration',opts:['No, XML is required','Yes, using Annotation-based configuration','Only with Java config','No, properties file needed']},
+  {topic:'ioc',q:'What is the default injection type recommended for mandatory dependencies?',a:'Constructor injection',opts:['Setter injection','Field injection','Constructor injection','Method injection']},
+  {topic:'ioc',q:'Which attribute in <constructor-arg> resolves ambiguity between same-type arguments?',a:'index or type',opts:['name','ref','index or type','value']},
+  {topic:'ioc',q:'Spring\'s IoC container is responsible for:',a:'Lifecycle, Instantiation, and Injection',opts:['Only Instantiation','Lifecycle, Instantiation, and Injection','Only Injection','Only Lifecycle']},
+  {topic:'ioc',q:'The @Configuration annotation indicates that:',a:'The class contains bean definitions',opts:['The class is a controller','The class contains bean definitions','The class is a service','The class is a repository']},
+  {topic:'ioc',q:'Where does the Spring container look for bean definitions by default in XML?',a:'The root of the classpath',opts:['/WEB-INF/','The root of the classpath','/src/main/resources/','/META-INF/']},
+  {topic:'ioc',q:'Which annotation is a specific type of @Component for the persistence layer?',a:'@Repository',opts:['@Dao','@Service','@Repository','@Persistence']},
+  {topic:'ioc',q:'Dependency Injection is a form of:',a:'Inversion of Control',opts:['Singleton Pattern','Inversion of Control','Factory Pattern','Observer Pattern']},
+  {topic:'ioc',q:'What happens if there are multiple beans of the same type for @Autowired?',a:'It throws a NoUniqueBeanDefinitionException',opts:['It picks the first one','It ignores the injection','It throws a NoUniqueBeanDefinitionException','It creates a new bean']},
+  {topic:'ioc',q:'Which annotation is used along with @Autowired to specify a bean by name?',a:'@Qualifier',opts:['@Named','@Primary','@Qualifier','@BeanName']},
+  {topic:'ioc',q:'XML-based configuration uses which file extension typically?',a:'.xml',opts:['.properties','.yml','.xml','.json']},
+  {topic:'ioc',q:'Setter injection is better for:',a:'Optional dependencies',opts:['Mandatory dependencies','Optional dependencies','Both mandatory and optional','Circular dependencies only']},
+  {topic:'ioc',q:'What is a Spring "Project" like Spring Security?',a:'An independent framework built on Spring',opts:['A Spring Bean','An independent framework built on Spring','A Spring annotation','A Spring module']},
+  {topic:'ioc',q:'The "context" namespace in XML is required for:',a:'Annotation-based configuration',opts:['XML-based configuration','Annotation-based configuration','Java-based configuration','Property file loading']},
+  {topic:'ioc',q:'Which method of BeanFactory returns a bean instance?',a:'getBean()',opts:['fetchBean()','getBean()','retrieveBean()','loadBean()']},
+  {topic:'ioc',q:'The Spring IoC container is also known as:',a:'Application Context',opts:['Spring Context','Bean Manager','Application Context','Spring Registry']},
+  {topic:'ioc',q:'What is the default scope of a Spring bean?',a:'singleton',opts:['prototype','request','singleton','session']},
+  {topic:'ioc',q:'Which scope creates a new bean instance every time it is requested?',a:'prototype',opts:['singleton','request','session','prototype']},
+  {topic:'ioc',q:'The @PostConstruct annotation is used for:',a:'Bean initialization',opts:['Bean destruction','Bean injection','Bean initialization','Bean scope']},
+  {topic:'ioc',q:'Which attribute in the <bean> tag specifies the method to call during destruction?',a:'destroy-method',opts:['init-method','destroy-method','close-method','shutdown-method']},
+  {topic:'ioc',q:'What is "Autowiring" by name?',a:'Matching bean ID with property name',opts:['Matching bean type with property type','Matching bean ID with property name','Matching bean class with field name','Automatic bean creation']},
+  {topic:'ioc',q:'Which annotation enables automatic detection of Spring beans?',a:'@ComponentScan',opts:['@EnableBeans','@ScanComponents','@ComponentScan','@AutoDetect']},
+  {topic:'ioc',q:'Bean inheritance in Spring is achieved using which attribute?',a:'parent',opts:['extends','inherits','parent','super']},
+  {topic:'ioc',q:'Which interface can be implemented to handle bean destruction?',a:'DisposableBean',opts:['DestroyableBean','DisposableBean','ClosableBean','ShutdownBean']},
+  {topic:'ioc',q:'Externalizing configuration is usually done using:',a:'.properties or .yml files',opts:['.xml files','.json files','.properties or .yml files','.ini files']},
+  {topic:'ioc',q:'The "singleton" scope means:',a:'One instance per IoC container',opts:['One instance per application','One instance per IoC container','One instance per request','One instance per thread']},
+  {topic:'ioc',q:'Which annotation is used to define the scope of a bean?',a:'@Scope',opts:['@BeanScope','@Singleton','@Scope','@Range']},
+  {topic:'ioc',q:'To inject a list into a bean in XML, which tag is used?',a:'<list>',opts:['<array>','<collection>','<list>','<set>']},
+  {topic:'ioc',q:'What does "Dependency Check" ensure?',a:'That all required properties are set',opts:['That no circular dependencies exist','That all required properties are set','That beans are singletons','That injection is constructor-based']},
+  {topic:'ioc',q:'The @PreDestroy annotation is equivalent to which XML attribute?',a:'destroy-method',opts:['init-method','destroy-method','close-method','lifecycle-method']},
+  {topic:'ioc',q:'How do you skip a bean from being autowired by type?',a:"autowire-candidate='false'",opts:["autowire='none'","autowire-candidate='false'",'@NoAutowire','@SkipAutowire']},
+  {topic:'ioc',q:'Inner beans are always:',a:'Anonymous and not accessible outside',opts:['Named and global','Anonymous and not accessible outside','Prototype-scoped always','Singleton-scoped always']},
+  {topic:'ioc',q:'Which annotation is used to inject a value from a properties file?',a:'@Value',opts:['@Property','@Config','@Value','@Inject']},
+  {topic:'ioc',q:'What is the purpose of "Abstract" beans in inheritance?',a:'To serve as a template for other beans',opts:['To prevent instantiation completely','To serve as a template for other beans','To create multiple instances','To handle transactions']},
+  {topic:'ioc',q:'In Autowiring, "byType" might fail if:',a:'No bean exists or multiple beans of that type exist',opts:['No bean ID matches','No bean exists or multiple beans of that type exist','The bean is abstract','The bean is prototype-scoped']},
+  {topic:'ioc',q:'Which scope is specifically for Web-aware ApplicationContext?',a:'request',opts:['prototype','session','request','thread']},
+  {topic:'ioc',q:'Can we use @Autowired on a constructor?',a:'Yes',opts:['No','Only with @Required','Yes','Only in XML config']},
+  {topic:'ioc',q:'Initialization methods are called:',a:'After dependencies are injected',opts:['Before bean creation','During bean creation','After dependencies are injected','Before dependencies are injected']},
+  {topic:'ioc',q:'Which tag is used to inject key-value pairs of strings?',a:'<props>',opts:['<map>','<set>','<props>','<entries>']},
+  {topic:'ioc',q:'Lazy initialization of a bean means it is created:',a:'Only when first requested',opts:['At startup','On every request','Only when first requested','Only in prototype scope']},
+  {topic:'ioc',q:'What is the use of @Required (deprecated in 5.1)?',a:'Check if a property is populated via XML',opts:['Mark mandatory constructors','Check if a property is populated via XML','Enable annotation scanning','Define bean scope']},
+  {topic:'jdbc',q:'Which class simplifies the use of JDBC in Spring?',a:'JdbcTemplate',opts:['DataSource','JdbcHelper','JdbcTemplate','ConnectionFactory']},
+  {topic:'jdbc',q:'What is the purpose of RowMapper?',a:'Mapping database rows to Java objects',opts:['Mapping SQL queries','Mapping database rows to Java objects','Mapping Java objects to tables','Mapping exceptions']},
+  {topic:'jdbc',q:'Which method of JdbcTemplate is used for INSERT, UPDATE, and DELETE?',a:'update()',opts:['execute()','query()','update()','modify()']},
+  {topic:'jdbc',q:'JdbcTemplate handles which of the following automatically?',a:'Connections and Exception handling',opts:['Transaction management only','SQL generation','Connections and Exception handling','ORM mapping']},
+  {topic:'jdbc',q:'The Data Source configuration provides:',a:'Connection details (URL, username, password)',opts:['SQL query templates','ORM mappings','Connection details (URL, username, password)','Transaction boundaries']},
+  {topic:'jdbc',q:'Which interface is implemented to create a custom RowMapper?',a:'RowMapper',opts:['ResultMapper','RowMapper','ColumnMapper','SqlMapper']},
+  {topic:'jdbc',q:'The queryForObject() method is used when:',a:'The query returns exactly one row',opts:['The query returns a list','The query returns exactly one row','The query is a DDL statement','The query returns a map']},
+  {topic:'jdbc',q:'What is the advantage of using JdbcDAOSupport?',a:'It provides a getJdbcTemplate() method',opts:['It handles transactions automatically','It provides a getJdbcTemplate() method','It generates SQL automatically','It maps objects to tables']},
+  {topic:'jdbc',q:'Which exception does Spring JDBC throw for database errors?',a:'DataAccessException (Runtime)',opts:['SQLException (Checked)','DataAccessException (Runtime)','JdbcException','DatabaseException']},
+  {topic:'jdbc',q:'A DataSource in Spring is usually managed as a:',a:'Spring Bean',opts:['Static class','Singleton utility','Spring Bean','Java EE resource only']},
+  {topic:'jdbc',q:'Which method executes a SELECT query returning a list of objects?',a:'query() or queryForList()',opts:['execute()','update()','query() or queryForList()','select()']},
+  {topic:'jdbc',q:'The JdbcTemplate is part of which Spring module?',a:'Spring JDBC',opts:['Spring ORM','Spring Data','Spring JDBC','Spring Core']},
+  {topic:'jdbc',q:'In RowMapper, which method must be overridden?',a:'mapRow()',opts:['map()','convert()','mapRow()','transform()']},
+  {topic:'jdbc',q:'Spring\'s DataAccessException is a:',a:'Unchecked/Runtime exception',opts:['Checked exception','Error','Unchecked/Runtime exception','Compile-time error']},
+  {topic:'jdbc',q:'To use Named parameters in SQL, which class is used?',a:'NamedParameterJdbcTemplate',opts:['JdbcTemplate','NamedJdbcTemplate','NamedParameterJdbcTemplate','ParameterizedJdbcTemplate']},
+  {topic:'jdbc',q:'Which of the following is NOT a benefit of JdbcTemplate?',a:'Automates transaction management completely without config',opts:['Reduces boilerplate code','Handles connection closing','Automates transaction management completely without config','Translates SQL exceptions']},
+  {topic:'jdbc',q:'The BeanPropertyRowMapper is used to:',a:'Automatically map columns to bean properties by name',opts:['Map beans to database tables','Automatically map columns to bean properties by name','Create SQL from bean names','Handle stored procedures']},
+  {topic:'jdbc',q:'What is the return type of JdbcTemplate.update()?',a:'int (number of rows affected)',opts:['void','boolean','int (number of rows affected)','ResultSet']},
+  {topic:'jdbc',q:'A DriverManagerDataSource is suitable for:',a:'Testing and simple applications',opts:['Production with connection pooling','Enterprise applications','Testing and simple applications','Distributed transactions']},
+  {topic:'jdbc',q:'Which method executes plain SQL like "CREATE TABLE"?',a:'execute()',opts:['run()','update()','execute()','create()']},
+  {topic:'jdbc',q:'When using JdbcDAOSupport, you must provide a:',a:'DataSource',opts:['JdbcTemplate only','Connection string','DataSource','SQL factory']},
+  {topic:'jdbc',q:'PreparedStatementCreator is used to:',a:'Manually create a PreparedStatement',opts:['Batch SQL updates','Manually create a PreparedStatement','Map result sets','Handle transactions']},
+  {topic:'jdbc',q:'ResultSetExtractor is used when:',a:'You want to process the entire ResultSet at once',opts:['You want one row','You use stored procedures','You want to process the entire ResultSet at once','You use batch updates']},
+  {topic:'jdbc',q:'Spring JDBC supports which of the following?',a:'Stored Procs, Batch updates, and Named Parameters',opts:['Only simple queries','Stored Procs only','Stored Procs, Batch updates, and Named Parameters','Only CRUD operations']},
+  {topic:'jdbc',q:'What is the primary role of the queryForMap() method?',a:'Returns a map representing one row',opts:['Returns all rows as a map','Returns a map representing one row','Returns column metadata','Returns connection details']},
+  {topic:'boot',q:'What is the primary goal of Spring Boot?',a:'Simplify Spring application setup and development',opts:['Replace Spring Framework','Simplify Spring application setup and development','Provide database ORM','Handle microservices routing']},
+  {topic:'boot',q:'Which annotation is a shortcut for @Configuration, @EnableAutoConfiguration, and @ComponentScan?',a:'@SpringBootApplication',opts:['@SpringApp','@BootApplication','@SpringBootApplication','@EnableSpring']},
+  {topic:'boot',q:'The default build tool for Spring Boot is:',a:'Maven or Gradle',opts:['Ant','Maven or Gradle','NPM','Make']},
+  {topic:'boot',q:'Which component provides "opinionated" dependencies to simplify pom.xml?',a:'Spring Boot Starters',opts:['Spring Boot Plugins','Spring Boot Starters','Spring Boot BOM','Spring Boot Auto-config']},
+  {topic:'boot',q:'What does "Auto-configuration" do in Spring Boot?',a:'Configures beans automatically based on classpath jars',opts:['Generates XML config files','Configures beans automatically based on classpath jars','Creates database schemas','Deploys to cloud automatically']},
+  {topic:'boot',q:'Which files are used for externalized configuration?',a:'application.properties and application.yml',opts:['config.xml','spring.properties','application.properties and application.yml','boot.properties']},
+  {topic:'boot',q:'The Spring Boot CLI is used for:',a:'Prototyping with Groovy scripts',opts:['Database migrations','Prototyping with Groovy scripts','Cloud deployments','API testing']},
+  {topic:'boot',q:'Which Spring Boot feature allows you to see the health of an application?',a:'Actuator',opts:['DevTools','Monitor','Actuator','HealthCheck']},
+  {topic:'boot',q:'Where does Spring Boot look for property files by default?',a:'/src/main/resources',opts:['/WEB-INF/','/src/main/resources','/META-INF/','/config/']},
+  {topic:'boot',q:'Spring Boot DevTools provides which feature?',a:'Auto Restart and Live Reload',opts:['Database auto-migration','Auto Restart and Live Reload','Automatic security','Auto-scaling']},
+  {topic:'boot',q:'What is the default embedded server in Spring Boot Web?',a:'Tomcat',opts:['Jetty','Netty','Tomcat','JBoss']},
+  {topic:'boot',q:'How do you define a custom port in application.properties?',a:'server.port=9090',opts:['port=9090','spring.port=9090','server.port=9090','app.port=9090']},
+  {topic:'boot',q:'Dependency Management in Spring Boot is handled via:',a:'The parent BOM (Bill of Materials)',opts:['Manual pom.xml entries','The parent BOM (Bill of Materials)','Spring XML config','Gradle plugins only']},
+  {topic:'boot',q:'Which annotation binds properties to a Java bean?',a:'@ConfigurationProperties',opts:['@PropertyBind','@Value','@ConfigurationProperties','@BindProperties']},
+  {topic:'boot',q:'Spring Boot "Profiles" are used for:',a:'Environment-specific configurations (dev, prod)',opts:['Bean scoping','Environment-specific configurations (dev, prod)','Database profiling','Performance tuning']},
+  {topic:'boot',q:'Which command runs a Spring Boot app via Maven?',a:'mvn spring-boot:run',opts:['mvn run:spring','mvn spring-boot:run','mvn start:app','mvn exec:java']},
+  {topic:'boot',q:'What is the purpose of SpringApplication.run()?',a:'To launch the Spring application context',opts:['To run unit tests','To deploy to server','To launch the Spring application context','To start the database']},
+  {topic:'boot',q:'The "Fat JAR" produced by Spring Boot contains:',a:'Application code and all dependencies',opts:['Only application code','Application code and all dependencies','Only compiled classes','Only configuration files']},
+  {topic:'boot',q:'Which starter is needed for building a RESTful web service?',a:'spring-boot-starter-web',opts:['spring-boot-starter-rest','spring-boot-starter-web','spring-boot-starter-mvc','spring-boot-starter-api']},
+  {topic:'boot',q:'Application Events allow:',a:'Communication between beans and Lifecycle actions',opts:['Database event handling','Communication between beans and Lifecycle actions','HTTP event handling','Security event logging']},
+  {topic:'boot',q:'What does "opinionated" mean in Spring Boot?',a:'It makes default choices for you to reduce configuration',opts:['You must follow its rules strictly','It makes default choices for you to reduce configuration','It forces a specific coding style','It auto-generates code']},
+  {topic:'boot',q:'YAML stands for:',a:"YAML Ain't Markup Language",opts:['Yet Another Markup Language',"YAML Ain't Markup Language",'Your App Model Language','YAML Application Meta Language']},
+  {topic:'boot',q:'The @EventListener annotation is used to:',a:'Handle application-level events',opts:['Create event objects','Publish events','Handle application-level events','Schedule tasks']},
+  {topic:'boot',q:'Can we change the default banner in Spring Boot?',a:'Yes, by adding a banner.txt',opts:['No, it is fixed','Yes, by adding a banner.txt','Yes, but only programmatically','No, only the color can be changed']},
+  {topic:'boot',q:'Which annotation enables specific auto-configuration classes?',a:'@EnableAutoConfiguration',opts:['@AutoConfig','@EnableAutoConfiguration','@SpringAutoConfig','@ConfigEnable']},
+  {topic:'ms',q:'What is a monolithic architecture?',a:'Unified, single-unit application',opts:['Distributed services','Microservices-based','Unified, single-unit application','Container-based application']},
+  {topic:'ms',q:'What is the main challenge of monolithic architecture as it grows?',a:'Scaling, Deployment complexity, and Coupling',opts:['Too many microservices','Scaling, Deployment complexity, and Coupling','Lack of REST APIs','Too many containers']},
+  {topic:'ms',q:'Microservices communicate primarily through:',a:'Lightweight protocols (HTTP/REST, gRPC)',opts:['Shared databases','Lightweight protocols (HTTP/REST, gRPC)','Direct method calls','Shared memory']},
+  {topic:'ms',q:'What is Service Discovery?',a:'Automatically detecting network locations of service instances',opts:['Finding microservice bugs','Automatically detecting network locations of service instances','Discovering new services to add','Load balancing services']},
+  {topic:'ms',q:'Which tool is a popular Service Discovery server in Spring?',a:'Netflix Eureka',opts:['Consul','Netflix Ribbon','Netflix Eureka','Zookeeper']},
+  {topic:'ms',q:'The API Gateway acts as:',a:'A single entry point for all client requests',opts:['A database router','A single entry point for all client requests','A service registry','A message broker']},
+  {topic:'ms',q:'What is a "Service Mesh"?',a:'Infrastructure layer for service-to-service communication',opts:['A network of databases','Infrastructure layer for service-to-service communication','A container orchestration tool','A monitoring dashboard']},
+  {topic:'ms',q:'Which technology is commonly used to "Containerize" microservices?',a:'Docker',opts:['Kubernetes','Docker','Ansible','Terraform']},
+  {topic:'ms',q:'In microservices, "Independence" means:',a:'Independent Deployment, Database, and Language',opts:['Services share a database','Independent Deployment, Database, and Language','Services use the same language','Services share code libraries']},
+  {topic:'ms',q:'Which component handles cross-cutting concerns (security/rate-limiting)?',a:'API Gateway',opts:['Service Mesh','Service Registry','API Gateway','Circuit Breaker']},
+  {topic:'ms',q:'What is a "Sidecar" pattern?',a:'A helper container running alongside the service',opts:['A backup service instance','A helper container running alongside the service','A load balancer pattern','A database replication pattern']},
+  {topic:'ms',q:'What does "Scalability" mean in microservices?',a:'Adding more instances of specific services as needed',opts:['Scaling the entire monolith','Adding more instances of specific services as needed','Using bigger servers','Adding more databases']},
+  {topic:'ms',q:'The Spring Cloud Config Server provides:',a:'Centralized configuration management',opts:['Service discovery','Centralized configuration management','Load balancing','Circuit breaking']},
+  {topic:'ms',q:'What is "Client-side Load Balancing"?',a:'The client chooses which service instance to call',opts:['The server distributes load','The client chooses which service instance to call','The API Gateway balances load','The database handles load']},
+  {topic:'ms',q:'Which Spring Cloud project provides client-side load balancing?',a:'Spring Cloud Netflix Ribbon (or LoadBalancer)',opts:['Spring Cloud Gateway','Spring Cloud Config','Spring Cloud Netflix Ribbon (or LoadBalancer)','Spring Cloud Sleuth']},
+  {topic:'ms',q:'Microservices promote which organizational strategy?',a:'Small, cross-functional teams (Two-Pizza Teams)',opts:['Large centralized teams','Small, cross-functional teams (Two-Pizza Teams)','Offshore development teams','Single DevOps team']},
+  {topic:'ms',q:'What is the role of a "Circuit Breaker" (e.g., Resilience4j)?',a:'To prevent cascading failures',opts:['To route API requests','To prevent cascading failures','To discover services','To balance load']},
+  {topic:'ms',q:'Consuming a microservice usually involves:',a:'RestTemplate or WebClient',opts:['SOAP client','JDBC connection','RestTemplate or WebClient','Shared library calls']},
+  {topic:'ms',q:'What is the "Database per Service" pattern?',a:'Each microservice has its own private database',opts:['All services share one database','Each microservice has its own private database','Services use in-memory databases only','Services use NoSQL only']},
+  {topic:'ms',q:'What is "Distributed Tracing"?',a:'Tracking a request as it moves through multiple services',opts:['Tracing database queries','Tracking a request as it moves through multiple services','Monitoring service health','Logging microservice errors']},
+  {topic:'ms',q:'Netflix Zuul and Spring Cloud Gateway are examples of:',a:'API Gateway',opts:['Service Registry','Load Balancer','API Gateway','Circuit Breaker']},
+  {topic:'ms',q:'A container contains:',a:'The application and all its runtime dependencies',opts:['Only the application code','The application and all its runtime dependencies','Only the OS','Only configuration files']},
+  {topic:'ms',q:'What does "Polyglot Persistence" mean?',a:'Using different types of databases for different services',opts:['Using multiple programming languages','Using different types of databases for different services','Storing data in multiple clouds','Using multiple ORMs']},
+];
+
+const TOPIC_CONFIG = {
+  ioc:  {label:'IoC & Beans',    badge:'badge-ioc',  cls:'tb-ioc'},
+  jdbc: {label:'Spring JDBC',    badge:'badge-jdbc',  cls:'tb-jdbc'},
+  boot: {label:'Spring Boot',    badge:'badge-boot',  cls:'tb-boot'},
+  ms:   {label:'Microservices',  badge:'badge-ms',    cls:'tb-ms'},
+};
+
+let selectedTopic = 'all';
+let questions = [];
+let currentIdx = 0;
+let correct = 0;
+let wrong = 0;
+let skipped = 0;
+let answered = false;
+let topicStats = {};
+
+function shuffle(arr) {
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+
+function setTopic(t, el) {
+  selectedTopic = t;
+  document.querySelectorAll('.topic-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const pool = t==='all' ? ALL_QUESTIONS : ALL_QUESTIONS.filter(q=>q.topic===t);
+  const lim = parseInt(document.getElementById('q-limit').max);
+  const newMax = pool.length;
+  const qLimitEl = document.getElementById('q-limit');
+  qLimitEl.max = newMax;
+  qLimitEl.value = Math.min(parseInt(qLimitEl.value)||newMax, newMax);
+  document.getElementById('q-limit-out').textContent = qLimitEl.value;
+  document.getElementById('q-count').textContent = qLimitEl.value;
+}
+
+function startQuiz() {
+  const pool = selectedTopic==='all' ? ALL_QUESTIONS : ALL_QUESTIONS.filter(q=>q.topic===selectedTopic);
+  const limit = parseInt(document.getElementById('q-limit').value);
+  questions = shuffle([...pool]).slice(0, limit);
+  currentIdx = 0; correct = 0; wrong = 0; skipped = 0;
+  topicStats = {};
+  questions.forEach(q=>{
+    if(!topicStats[q.topic]) topicStats[q.topic]={c:0,w:0,s:0};
+  });
+  showScreen('screen-quiz');
+  renderQ();
+}
+
+function renderQ() {
+  if(currentIdx >= questions.length){showResult();return;}
+  answered = false;
+  const q = questions[currentIdx];
+  const tc = TOPIC_CONFIG[q.topic];
+  document.getElementById('prog-text').textContent = `Question ${currentIdx+1} of ${questions.length}`;
+  document.getElementById('prog-fill').style.width = ((currentIdx/questions.length)*100)+'%';
+  document.getElementById('live-correct').textContent = correct;
+  document.getElementById('live-wrong').textContent = wrong;
+  document.getElementById('q-badge').textContent = tc.label;
+  document.getElementById('q-badge').className = 'q-topic-badge '+tc.badge;
+  document.getElementById('q-num-label').textContent = '#'+(currentIdx+1);
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('next-btn').style.display = 'none';
+
+  const opts = shuffle([...q.opts]);
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+  opts.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = opt;
+    btn.onclick = ()=>selectAnswer(opt, q.a, btn);
+    container.appendChild(btn);
+  });
+}
+
+function selectAnswer(chosen, correct_ans, btn) {
+  if(answered) return;
+  answered = true;
+  const allBtns = document.querySelectorAll('.opt-btn');
+  allBtns.forEach(b=>{
+    b.disabled = true;
+    if(b.textContent===correct_ans) b.classList.add('correct');
+  });
+  if(chosen===correct_ans){
+    correct++;
+    topicStats[questions[currentIdx].topic].c++;
+    document.getElementById('feedback').textContent = '✓ Correct!';
+    document.getElementById('feedback').style.color='#27500A';
+  } else {
+    btn.classList.add('wrong');
+    wrong++;
+    topicStats[questions[currentIdx].topic].w++;
+    document.getElementById('feedback').textContent = '✗ Incorrect. The correct answer is highlighted.';
+    document.getElementById('feedback').style.color='#501313';
+  }
+  document.getElementById('feedback').style.display='block';
+  document.getElementById('live-correct').textContent=correct;
+  document.getElementById('live-wrong').textContent=wrong;
+  document.getElementById('next-btn').style.display='inline-block';
+}
+
+function skipQ() {
+  if(answered) return;
+  skipped++;
+  topicStats[questions[currentIdx].topic].s++;
+  currentIdx++;
+  renderQ();
+}
+
+function nextQ() {
+  currentIdx++;
+  renderQ();
+}
+
+function endQuiz() {
+  skipped += questions.length - currentIdx;
+  showResult();
+}
+
+function showResult() {
+  showScreen('screen-result');
+  const total = correct + wrong + skipped;
+  const pct = total>0 ? Math.round((correct/total)*100) : 0;
+  document.getElementById('res-correct').textContent = correct;
+  document.getElementById('res-wrong').textContent = wrong;
+  document.getElementById('res-skip').textContent = skipped;
+  document.getElementById('res-total').textContent = total;
+
+  const circumference = 263.9;
+  const offset = circumference - (pct/100)*circumference;
+  document.getElementById('ring-circle').style.strokeDashoffset = offset;
+  document.getElementById('ring-pct').textContent = pct+'%';
+
+  let title='', sub='';
+  if(pct>=90){title='Excellent!';sub='Outstanding performance!';}
+  else if(pct>=75){title='Great Job!';sub='You have a solid understanding.';}
+  else if(pct>=60){title='Good Effort!';sub='A bit more review will help.';}
+  else if(pct>=40){title='Keep Practicing!';sub='Review the topics and try again.';}
+  else{title='Keep Going!';sub='Study the material and retry.';}
+  document.getElementById('result-title').textContent=title;
+  document.getElementById('result-sub').textContent=sub;
+
+  let breakdown='<div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px">Topic Breakdown</div>';
+  Object.entries(topicStats).forEach(([topic, s])=>{
+    const tc=TOPIC_CONFIG[topic];
+    const t=s.c+s.w+s.s;
+    if(t===0)return;
+    const p=Math.round((s.c/t)*100);
+    breakdown+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span class="q-topic-badge ${tc.badge}" style="min-width:110px">${tc.label}</span>
+      <div style="flex:1;background:var(--color-background-secondary);border-radius:4px;height:6px">
+        <div style="width:${p}%;background:#534AB7;height:6px;border-radius:4px"></div>
+      </div>
+      <span style="font-size:12px;color:var(--color-text-secondary);min-width:50px">${s.c}/${t} (${p}%)</span>
+    </div>`;
+  });
+  document.getElementById('topic-breakdown').innerHTML=breakdown;
+}
+
+function showStart(){showScreen('screen-start');}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+</script>
