@@ -2,7 +2,7 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font-sans); }
-#quiz-app { padding: 1rem 0; max-width: 760px; margin: auto; }
+#quiz-app { padding: 1rem; max-width: 760px; margin: auto; }
 .screen { display: none; }
 .screen.active { display: block; }
 .topic-btn {
@@ -106,6 +106,32 @@ body { font-family: var(--font-sans); }
 .sub { font-size: 14px; color: var(--color-text-secondary); }
 .q-skip { font-size: 13px; color: var(--color-text-secondary); cursor: pointer; }
 .q-skip:hover { color: var(--color-text-primary); }
+
+@media (max-width: 768px) {
+  #quiz-app { padding: 0.75rem; }
+  .start-card, .q-card { padding: 1rem; border-radius: 12px; }
+  .h1 { font-size: 20px; }
+  .q-text { font-size: 15px; }
+  .score-ring { width: 88px; height: 88px; margin-bottom: 1rem; }
+  .result-big { font-size: 24px; }
+  .stat-row { gap: 8px; margin: 1rem 0; }
+  .stat-box { flex: 1 1 calc(50% - 8px); min-width: 0; padding: 10px 12px; }
+  .topic-btn { font-size: 11px; padding: 6px 10px; }
+  #screen-start input[type="range"] { width: 100% !important; }
+  #screen-start [id="q-limit-out"] { display: inline-block; margin-top: 8px; margin-left: 0 !important; }
+  .nav-row { flex-wrap: wrap; }
+  .nav-row .btn-primary, .nav-row .btn-secondary { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  #quiz-app { padding: 0.5rem; }
+  .start-card, .q-card { padding: 0.875rem; }
+  .q-meta { align-items: flex-start; }
+  .q-topic-badge, .q-num { font-size: 11px; }
+  .opt-btn { padding: 10px 12px; font-size: 13px; }
+  .btn-primary, .btn-secondary { padding: 10px 14px; font-size: 13px; }
+  .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 </style>
 
 <div id="quiz-app">
@@ -200,6 +226,13 @@ body { font-family: var(--font-sans); }
 </div>
 
 <script>
+if (!document.querySelector('meta[name="viewport"]')) {
+  const viewportMeta = document.createElement('meta');
+  viewportMeta.name = 'viewport';
+  viewportMeta.content = 'width=device-width, initial-scale=1';
+  document.head.appendChild(viewportMeta);
+}
+
 const ALL_QUESTIONS = [
   {topic:'ioc',q:'What does IoC stand for in Spring?',a:'Inversion of Control',opts:['Injection of Components','Inversion of Control','Interface of Classes','Instance of Container']},
   {topic:'ioc',q:'Which design pattern is used by Spring to achieve IoC?',a:'Dependency Injection (DI)',opts:['Singleton','Observer','Dependency Injection (DI)','Factory']},
